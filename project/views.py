@@ -14,7 +14,16 @@ user= Users.objects.get(id=1)
 @api_view(['Get']) 
 def get_options(request, format=None): 
     
-    options = Options.objects.all()
+    search_query = request.GET.get('search', '')
+    min_price = int(request.GET.get('min_price', 0))
+    max_price = int(request.GET.get('max_price', 10000))
+    category = request.GET.get('category', '')
+
+    options = Options.objects.filter(title__icontains=search_query).filter(price__range=(min_price, max_price))
+
+    if category and category != 'Любая категория':
+        options = options.filter(category=category)
+
     serializer = OptionSerializer(options, many=True)
     
     # Retrieve the application with customer user and status equal to 1
