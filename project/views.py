@@ -6,6 +6,7 @@ from .serializers import *
 from .models import * 
 from rest_framework.decorators import api_view 
 from minio import Minio
+from datetime import datetime
 
 user= Users.objects.get(id=1)
 
@@ -19,14 +20,13 @@ def get_options(request, format=None):
     max_price = int(request.GET.get('max_price', 10000))
     category = request.GET.get('category', '')
 
-    options = Options.objects.filter(title__icontains=search_query).filter(price__range=(min_price, max_price))
+    options = Options.objects.filter(available=True).filter(title__icontains=search_query).filter(price__range=(min_price, max_price))
 
     if category and category != 'Любая категория':
         options = options.filter(category=category)
 
     serializer = OptionSerializer(options, many=True)
     
-    # Retrieve the application with customer user and status equal to 1
     application = Applications.objects.filter(customer=user, status=1).first()
     if application:
         application_serializer = ApplicationSerializer(application)
@@ -55,13 +55,13 @@ def post_option(request, format=None):
                secure=False)
     i=new_option.id-1
     try:
-        i = new_option.id
+        i = new_option.title
         img_obj_name = f"{i}.png"
         file_path = f"assets/img/{request.data.get('image')}"  
         client.fput_object(bucket_name='img',
                            object_name=img_obj_name,
                            file_path=file_path)
-        new_option.image = f"minio://localhost:9000/img/{img_obj_name}"
+        new_option.image = f"http://localhost:9000/img/{img_obj_name}"
         new_option.save()
     except Exception as e:
         return Response({"error": str(e)})
@@ -120,19 +120,15 @@ def add_to_application(request, pk):
         application = Applications.objects.create(customer_id=user.id)
 
     amount = request.data.get("amount",1)
+    try:
+        application_option = Applicationsoptions.objects.get(application=application, option=option)
+        application_option.amount += int(amount)
+        application_option.save()
+    except Applicationsoptions.DoesNotExist:
+        application_option = Applicationsoptions(application=application, option=option, amount=amount)
+        application_option.save()
 
-    application_option = Applicationsoptions.objects.create(
-        option=option,
-        amount=amount  # Сохранение количества опций
-    )
-
-    application_option.application = application  # Устанавливаем связь с объектом Applications
-    application_option.save()  # Сохраняем объект Applicationsoptions
-
-    serializer = OptionSerializer(application_option)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
+    return Response(status=200)
 
 
 
@@ -175,14 +171,15 @@ def update_by_user(request, pk):
 
     request_status = request.data["status"]
 
-    if request_status not in [2, 3]:
+    if int(request.data["status"]) not in [2, 3]:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     application = Applications.objects.get(pk=pk)
     app_status = application.status
 
-    # if app_status == 5:
-    #     return Response("Статус изменить нельзя")
+    if int(request.data["status"]) in [3]:
+        application.formed_at=timezone.now()
+    
 
     application.status = request_status
     application.save()
@@ -197,10 +194,12 @@ def update_by_admin(request, pk):
 
     request_status = request.data["status"]
 
-    if request_status not in [4, 5]:
+    if int(request.data["status"]) not in [4, 5]:
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     application = Applications.objects.get(pk=pk)
+    if int(request.data["status"]) in [4]:
+        application.formed_at=timezone.now()
     # app_status = application.status
 
     # if app_status == 5:
