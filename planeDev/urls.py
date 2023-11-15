@@ -10,7 +10,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.contrib import admin
 from rest_framework import permissions
-
+from rest_framework import routers
  
 router = routers.DefaultRouter()
 
@@ -26,6 +26,9 @@ schema_view = get_schema_view(
    public=True,
    permission_classes=(permissions.AllowAny,),
 )
+
+
+# router.register(r'user', views.UserViewSet, basename='user')
  
 urlpatterns = [
     #OPTIONS
@@ -49,6 +52,9 @@ urlpatterns = [
     path(r"applications/<int:application_id>/delete_option/<int:option_id>/", views.delete_option_from_application),#DELETE - удалить конкретную опцию из конкретной заявки - ok
     path(r"applications/<int:application_id>/update_amount/<int:option_id>/", views.update_option_amount),#PUT - изменить кол-во конкретной опции в заявке - ok
     
+    path('create/',  views.create, name='create'),
+    path('login/',  views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
     
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),

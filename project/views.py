@@ -7,8 +7,63 @@ from .models import *
 from rest_framework.decorators import api_view 
 from minio import Minio
 from datetime import datetime
+from rest_framework import viewsets
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse
+from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from .permissions import *
+from django.contrib.auth import get_user_model
 
-user= Users.objects.get(id=2)
+# user= Users.objects.get(id=2)
+
+@api_view(['Post'])
+@permission_classes([AllowAny])
+def create(request):
+    print('aaaaaaaa')
+    if Users.objects.filter(email=request.data['email']).exists():
+        return Response({'status': 'Exist'}, status=400)
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        print(serializer.data)
+        Users.objects.create_user(email=serializer.data['email'],
+                                    password=serializer.data['password'],
+                                    is_moderator=serializer.data['is_moderator'])
+        return Response({'status': 'Success'}, status=200)
+    return Response({'status': 'Error', 'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@authentication_classes([])
+@csrf_exempt
+@swagger_auto_schema(method='post', request_body=UserSerializer)
+@api_view(['Post'])
+def login_view(request):
+    email = request.POST["email"] # допустим передали username и password
+    password = request.POST["password"]
+    user = authenticate(request, email=email, password=password)
+    if user is not None:
+        login(request, user)
+        return HttpResponse("{'status': 'ok'}")
+    else:
+        return HttpResponse("{'status': 'error', 'error': 'login failed'}")
+
+def logout_view(request):
+    logout(request._request)
+    return Response({'status': 'Success'})
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #GET - получить список всех опций 
