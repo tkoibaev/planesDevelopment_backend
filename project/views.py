@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from minio import Minio
 from datetime import datetime
 
-user= Users.objects.get(id=1)
+user= Users.objects.get(id=2)
 
 
 #GET - получить список всех опций 
