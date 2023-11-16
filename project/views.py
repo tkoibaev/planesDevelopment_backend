@@ -10,14 +10,19 @@ from datetime import datetime
 from rest_framework import viewsets
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from .permissions import *
 from django.contrib.auth import get_user_model
+import redis
+import uuid
+from django.conf import settings
 
-# user= Users.objects.get(id=2)
+session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+
+user= Users.objects.get(id=2)
 
 @api_view(['Post'])
 @permission_classes([AllowAny])
@@ -35,17 +40,22 @@ def create(request):
     return Response({'status': 'Error', 'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@authentication_classes([])
-@csrf_exempt
+# @authentication_classes([])
+# @csrf_exempt
 @swagger_auto_schema(method='post', request_body=UserSerializer)
 @api_view(['Post'])
 def login_view(request):
-    email = request.POST["email"] # допустим передали username и password
-    password = request.POST["password"]
-    user = authenticate(request, email=email, password=password)
+    username = request.data.get('email')
+    password = request.data.get('password')
+    user = authenticate(request, email=username, password=password)
+    
     if user is not None:
-        login(request, user)
-        return HttpResponse("{'status': 'ok'}")
+        random_key = str(uuid.uuid4())
+        session_storage.set(random_key, username)
+        response = HttpResponse("{'status': 'ok'}")
+        response.set_cookie("session_id", random_key)
+
+        return response
     else:
         return HttpResponse("{'status': 'error', 'error': 'login failed'}")
 
@@ -68,6 +78,7 @@ def logout_view(request):
 
 #GET - получить список всех опций 
 @api_view(['Get']) 
+# @permission_classes([IsModerator])
 def get_options(request, format=None): 
     
     search_query = request.GET.get('search', '')
