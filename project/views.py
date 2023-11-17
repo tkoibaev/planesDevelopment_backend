@@ -24,6 +24,8 @@ session_storage = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDI
 
 user= Users.objects.get(id=2)
 
+
+@swagger_auto_schema(method='post', request_body=UserSerializer)
 @api_view(['Post'])
 @permission_classes([AllowAny])
 def create(request):
@@ -31,6 +33,7 @@ def create(request):
     if Users.objects.filter(email=request.data['email']).exists():
         return Response({'status': 'Exist'}, status=400)
     serializer = UserSerializer(data=request.data)
+    print('sss')
     if serializer.is_valid():
         print(serializer.data)
         Users.objects.create_user(email=serializer.data['email'],
@@ -44,6 +47,7 @@ def create(request):
 # @csrf_exempt
 @swagger_auto_schema(method='post', request_body=UserSerializer)
 @api_view(['Post'])
+@permission_classes([AllowAny])
 def login_view(request):
     username = request.data.get('email')
     password = request.data.get('password')
@@ -51,13 +55,19 @@ def login_view(request):
     
     if user is not None:
         random_key = str(uuid.uuid4())
+        user_data = {
+            "user_id": user.id,
+            "email": user.email,
+            "is_moderator": user.is_moderator,
+            "access_token": random_key
+        }
         session_storage.set(random_key, username)
-        response = HttpResponse("{'status': 'ok'}")
+        response = Response(user_data, status=status.HTTP_201_CREATED)
         response.set_cookie("session_id", random_key)
 
         return response
     else:
-        return HttpResponse("{'status': 'error', 'error': 'login failed'}")
+        return Response({'status': 'Error'}, status=status.HTTP_400_BAD_REQUEST)
 
 def logout_view(request):
     logout(request._request)
@@ -200,13 +210,28 @@ def add_to_application(request, pk):
 
  
 #GET - получить список всех заявок 
-@api_view(['Get']) 
-def get_applications(request, format=None): 
-    print('get') 
-    applications = Applications.objects.all() 
-    serializer = ApplicationSerializer(applications, many=True) 
-    return Response(serializer.data) 
- 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_applications(request, format=None):
+    print(request.headers)
+
+    authorization_header = request.headers.get('Authorization')
+    access_token = authorization_header.split(' ')[1] if authorization_header else None
+    print(access_token)
+
+    username = session_storage.get(access_token).decode('utf-8')
+    print(username)
+
+    user_id = Users.objects.filter(email=username).values_list('id', flat=True).first()
+
+    if username is not None and user_id is not None:
+        applications = Applications.objects.filter(customer_id=user_id)
+        serializer = ApplicationSerializer(applications, many=True)
+
+        return Response(serializer.data)
+    else:
+        return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
+    
 #GET - получить одну заявку 
 @api_view(['GET'])
 def get_application(request, pk, format=None):

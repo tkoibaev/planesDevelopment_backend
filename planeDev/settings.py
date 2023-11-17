@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     # DRF
     'rest_framework',
-
+    'corsheaders',
     # Наше приложение
     'project',
 ]
@@ -56,7 +56,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ]
 }
-
+# SESSION_COOKIE_SAMESITE = None
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -65,6 +65,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+]
+
+CORS_ALLOWED_ORIGINS = [
+   'http://localhost:3000',
 ]
 
 ROOT_URLCONF = 'planeDev.urls'
