@@ -59,7 +59,7 @@ def login_view(request):
             "user_id": user.id,
             "email": user.email,
             "is_moderator": user.is_moderator,
-            "access_token": random_key
+            "session_id": random_key
         }
         session_storage.set(random_key, username)
         response = Response(user_data, status=status.HTTP_201_CREATED)
@@ -70,8 +70,16 @@ def login_view(request):
         return Response({'status': 'Error'}, status=status.HTTP_400_BAD_REQUEST)
 
 def logout_view(request):
-    logout(request._request)
-    return Response({'status': 'Success'})
+    authorization_header = request.headers.get('Authorization')
+    access_token = authorization_header.split(' ')[1] if authorization_header else None
+    if access_token is None:
+        message = {"message": "Token is not found in cookie"}
+        return Response(message, status=status.HTTP_401_UNAUTHORIZED)
+    session_storage.delete(access_token)
+    response = Response({'message': 'Logged out successfully'})
+    response.delete_cookie('session_id')
+
+    return response
 
 
 
@@ -220,14 +228,14 @@ def get_applications(request, format=None):
     print(access_token)
 
     username = session_storage.get(access_token).decode('utf-8')
-    print(username)
+    print('lala',username)
 
     user_id = Users.objects.filter(email=username).values_list('id', flat=True).first()
 
     if username is not None and user_id is not None:
         applications = Applications.objects.filter(customer_id=user_id)
         serializer = ApplicationSerializer(applications, many=True)
-
+        print('lala',serializer.data)
         return Response(serializer.data)
     else:
         return Response("Invalid user", status=status.HTTP_400_BAD_REQUEST)
