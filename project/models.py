@@ -33,7 +33,9 @@ class NewUserManager(UserManager):
 
 
 
+
 class Users(AbstractBaseUser, PermissionsMixin): 
+
     email = models.CharField(max_length=500,unique=True) 
     password = models.CharField(max_length=500, blank=True, null=True) 
     is_moderator = models.BooleanField(blank=True, null=True) 
@@ -78,7 +80,7 @@ class Applications(models.Model):
 class Applicationsoptions(models.Model): 
     amount = models.IntegerField(default=1,blank=True, null=True) 
     application = models.ForeignKey(Applications, on_delete=models.CASCADE, blank=True, null=True) 
-    option = models.ForeignKey(Options, on_delete=models.CASCADE, blank=True, null=True) 
+    option = models.ForeignKey(Options, on_delete=models.CASCADE, blank=True, null=True)
   
     class Meta: 
         managed = True

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-enh+z_z(f!wjbmg30h#()!uw3804l0#d318@hw9bz+$nftx4qp
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+# ALLOWED_HOSTS = ['192.168.84.65'] #для нативки python manage.py runserver 172.20.10.3:8000, для остальный комментить
 REDIS_HOST = '127.0.0.1'
 REDIS_PORT = 6379
 
@@ -68,9 +68,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-   'http://localhost:3000',
-]
+
 
 ROOT_URLCONF = 'planeDev.urls'
 
@@ -147,9 +145,36 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:8000",
+# ]
+# CORS_ALLOWED_ORIGINS = [
+#    'http://localhost:3000',
+# ]
+# CORS_ALLOWED_HEADERS = [
+#     'Origin',
+#     'X-Api-Key',
+#     'X-Requested-With',
+#     'Content-Type',
+#     'Accept',
+#     'Authorization',
+# ]
+CORS_ALLOWED_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'GET',
+    'DELETE',
+    # 'OPTIONS',
 ]
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+# ]
+
+# CORS_ORIGIN_ALLOW_ALL = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
