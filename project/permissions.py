@@ -30,7 +30,7 @@ class IsAuth(permissions.BasePermission):
     def has_permission(self, request, view): 
         # access_token = request.headers.get('Authorization') 
         access_token = request.COOKIES.get("access_token") 
-        print(access_token)
+        # print(access_token)
         if access_token is None: 
             return False 
         try: 

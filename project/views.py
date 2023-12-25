@@ -32,13 +32,10 @@ user= Users.objects.get(id=20)
 @api_view(['Post'])
 @permission_classes([AllowAny])
 def create(request):
-    print('aaaaaaaa')
     if Users.objects.filter(email=request.data['email']).exists():
         return Response({'status': 'Exist'}, status=400)
     serializer = UserSerializer(data=request.data)
-    print('sss')
     if serializer.is_valid():
-        print(serializer.data)
         Users.objects.create_user(email=serializer.data['email'],
                                     password=serializer.data['password'],
                                     is_moderator=serializer.data['is_moderator'])
@@ -48,10 +45,8 @@ def create(request):
 @api_view(['GET'])
 @permission_classes([IsAuth])
 def user_info(request):
-    print(request.headers.get('Authorization'))
     try:
         access_token = request.COOKIES["access_token"]
-        print('access_token', access_token)
         if session_storage.exists(access_token):
             email = session_storage.get(access_token).decode('utf-8')
             user = Users.objects.get(email=email)
@@ -62,7 +57,6 @@ def user_info(request):
                 "is_moderator": user.is_moderator,
                 "current_cart": application.id if application else -1,
             }
-            print(user_data)
             return Response(user_data, status=status.HTTP_200_OK)
         else:
             return Response({'status': 'Error', 'message': 'Session does not exist'})
@@ -125,14 +119,11 @@ def logout_view(request):
 @api_view(['Get']) 
 @permission_classes([AllowAny])
 def get_current_cart(request, format=None):
-    print(request.headers)
 
     authorization_header = request.headers.get('Authorization')
     access_token = authorization_header.split(' ')[1] if authorization_header else None
-    print(access_token)
 
     username = session_storage.get(access_token).decode('utf-8')
-    print('lala',username)
 
     user_id = Users.objects.filter(email=username).values_list('id', flat=True).first()
 
@@ -161,21 +152,27 @@ def get_current_cart(request, format=None):
 @api_view(['GET']) 
 @permission_classes([AllowAny])
 def get_options(request, format=None): 
-    
+    # access_token = request.COOKIES["access_token"]
+    # username = session_storage.get(access_token).decode('utf-8')
+    # # user_id = Users.objects.filter(email=username).values_list('id', flat=True).first()
+    # user = Users.objects.get(email=username)
+
     search_query = request.GET.get('search', '')
     min_price = int(request.GET.get('min_price', 0))
     max_price = int(request.GET.get('max_price', 10000))
     category = request.GET.get('category', '')
-
+    # if user.is_moderator:
+    #     options = Options.objects.filter(title__icontains=search_query).filter(price__range=(min_price, max_price))
+    # else:
     options = Options.objects.filter(available=True).filter(title__icontains=search_query).filter(price__range=(min_price, max_price))
 
     if category and category != 'Любая категория':
         options = options.filter(category=category)
-
     try:
+        print('vvv')
         access_token = request.COOKIES["access_token"]
+        print('aaaaaa')
         username = session_storage.get(access_token).decode('utf-8')
-        print(username)
         user_ind = Users.objects.filter(email=username).first()
         application = Applications.objects.filter(customer_id=user_ind.id, status=1).values_list('id', flat=True).first()
         serializer = OptionSerializer(options, many=True)
@@ -193,33 +190,14 @@ def get_options(request, format=None):
  
 #POST - добавить новую опцию 
 @api_view(['Post']) 
+@permission_classes([AllowAny])
 def post_option(request, format=None):     
-    serializer = OptionSerializer(data=request.data) 
-    if not serializer.is_valid(): 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
-    new_option = serializer.save() 
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
-    client = Minio(endpoint="localhost:9000",
-               access_key='minioadmin',
-               secret_key='minioadmin',
-               secure=False)
-    i=new_option.id-1
-    try:
-        i = new_option.title
-        img_obj_name = f"{i}.png"
-        file_path = f"assets/img/{request.data.get('image')}"  
-        client.fput_object(bucket_name='img',
-                           object_name=img_obj_name,
-                           file_path=file_path)
-        new_option.image = f"http://localhost:9000/img/{img_obj_name}"
-        new_option.save()
-    except Exception as e:
-        return Response({"error": str(e)})
-    
-    
-    option = Options.objects.filter(available=True)
-    serializer = OptionSerializer(option, many=True)
-    return Response(serializer.data)
+    serializer = OptionSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 @api_view(['POST'])
@@ -266,6 +244,7 @@ def get_option(request, pk, format=None):
  
 #PUT - обновить одну опцию 
 @api_view(['Put']) 
+@permission_classes([AllowAny])
 def put_option(request, pk, format=None): 
     option = get_object_or_404(Options, pk=pk) 
     serializer = OptionSerializer(option, data=request.data) 
@@ -322,7 +301,22 @@ def add_to_application(request, pk):
         application_option = Applicationsoptions(application=application, option=option, amount=amount)
         application_option.save()
 
-    return Response(application.id)
+    serializer = ApplicationSerializer(application)
+    application_data = serializer.data
+
+    # Получить связанные опции для заявки с полными данными из таблицы Options
+    application_options = Applicationsoptions.objects.filter(application=application)
+    options_data = []
+    for app_option in application_options:
+        option_serializer = OptionSerializer(app_option.option)
+        option_data = option_serializer.data
+        option_data['amount'] = app_option.amount
+        options_data.append(option_data)
+    
+    # Добавить данные об опциях в данные о заявке
+    application_data['options'] = options_data
+    
+    return Response(application_data)
 
 
 
@@ -337,9 +331,19 @@ def get_applications(request, format=None):
 
     if username is not None and user_id is not None:
         user = Users.objects.get(email=username)
-        print(user.is_moderator)
         if user.is_moderator:
-            applications = Applications.objects
+            start_day = request.GET.get('start_day')
+            end_day = request.GET.get('end_day')
+            category = request.GET.get('category', '')
+            start_day = start_day.split(' ')[0:-5]
+            end_day = end_day.split(' ')[0:-5]
+            start_day = ' '.join(start_day)
+            end_day = ' '.join(end_day)
+            start_day = datetime.strptime(start_day, '%a %b %d %Y %H:%M:%S')
+            end_day = datetime.strptime(end_day, '%a %b %d %Y %H:%M:%S')    
+            applications = Applications.objects.filter(created_at__range=(start_day, end_day)).exclude(status=2).exclude(status=1)
+            if category and category != '0':
+                applications = applications.filter(status=category).exclude(status=2).exclude(status=1)
         else:
             applications = Applications.objects.filter(customer_id=user_id).exclude(status=2)
         serializer = ApplicationSerializer(applications, many=True)
@@ -434,7 +438,6 @@ def update_by_admin(request, pk):
 @api_view(['Delete']) 
 def delete_application(request, pk, format=None):     
     application = get_object_or_404(Applications, pk=pk) 
-    print(application.status)
     if application.status == '1':
         application.delete() 
         return Response("Заявка успешно удалена.")
@@ -458,7 +461,6 @@ def delete_option_from_application(request, application_id, option_id):
 
     application_subscription = get_object_or_404(Applicationsoptions, application=application, option=option)
     if application_subscription is None:
-        print('kakakakakak')
         return Response("Заявка не найдена", status=404)
     application.applicationsoptions_set.filter(option=option).delete()
     application.save()
@@ -468,6 +470,7 @@ def delete_option_from_application(request, application_id, option_id):
 
 #PUT - изменить кол-во конкретной опции в заявке
 @api_view(["PUT"])
+@permission_classes([AllowAny])
 def update_option_amount(request, application_id, option_id):
     if not Applications.objects.filter(pk=application_id).exists() or not Options.objects.filter(pk=option_id).exists():
         return Response("Заявки или опции с такими id не существует", status=status.HTTP_404_NOT_FOUND)
@@ -476,9 +479,15 @@ def update_option_amount(request, application_id, option_id):
 
     if not application_option:
         return Response("В этой заявке нет такой опции", status=status.HTTP_404_NOT_FOUND)
+    prev_amount = application_option.amount
+    if request.data["action"] ==0 and prev_amount!=1:
+        application_option.amount = prev_amount-1
+    elif request.data["action"] ==1 :
+        application_option.amount = prev_amount+1
 
-    new_amount = request.data.get("amount",1)
-    application_option.amount = new_amount
+    
+    # new_amount = request.data.get("amount",1)
+    # application_option.amount = new_amount
     application_option.save()
     return Response("Amount успешно обновлен", status=status.HTTP_200_OK)
     # if new_amount is not None:

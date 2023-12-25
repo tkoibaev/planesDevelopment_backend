@@ -31,9 +31,6 @@ class NewUserManager(UserManager):
         user.save(using=self.db)
         return user
 
-
-
-
 class Users(AbstractBaseUser, PermissionsMixin): 
 
     email = models.CharField(max_length=500,unique=True) 

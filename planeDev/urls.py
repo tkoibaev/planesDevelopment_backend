@@ -35,7 +35,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path(r'options/', views.get_options, name='options-list'),#GET - получить список всех опций - OK
     path(r'options/post/', views.post_option, name='options-post'),#POST - добавить новую опцию - ok
-    path(r'options/<int:pk>/image/post', views.postImageToOption),
+    path(r'options/<int:pk>/image/post/', views.postImageToOption),
     path(r'options/<int:pk>/', views.get_option, name='options-detail'),#GET - получить одну опцию - ok
     path(r'options/<int:pk>/put/', views.put_option, name='options-put'),#PUT - обновить одну опцию - ok
     path(r'options/<int:pk>/delete/', views.delete_option, name='options-delete'),#PUT - удалить одну опцию - ok
