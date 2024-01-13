@@ -1,0 +1,11 @@
+{% load static %}
+<div class="card">
+    <div>
+        <img class='card__image' src="{% static var.image %}" alt="card image" />
+    </div>
+    <div class="card__container">
+        <div class="card__container_title">{{ var.title }}</div>
+        <div class="card__container_subtitle">{{ var.category }}</div>
+    </div>
+
+</div>

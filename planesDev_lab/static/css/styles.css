@@ -1,0 +1,132 @@
+body {
+    box-sizing: border-box;
+}
+
+input {
+    all: unset;
+}
+
+
+/* MAIN PAGE ----------------------------------------------- */
+.page__content a {
+    text-decoration: none;
+}
+
+.content {
+    font-family:Arial, Helvetica, sans-serif
+
+}
+
+.page {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.page__input {
+    border: #32bee1 1px solid;
+    border-radius: 5px;
+    padding: 5px 10px;
+}
+
+.page__input:focus {
+    border: #32bee1 2px solid;
+    padding: 4px 9px;
+}
+
+.page__button {
+    background-color: #32bee1;
+    border-radius: 5px;
+    color: #fff;
+
+    padding: 6px;
+    border: none;
+    transition: background-color .2s linear;
+}
+
+.page__button:hover {
+    cursor: pointer;
+    background-color: #276170;
+}
+
+.page__header {
+    width: 100%;
+    height: 40px;
+    background-color: #32bee1;
+
+    font-size: 30px;
+
+    padding: 20px;
+
+    margin-bottom: 20px;
+}
+
+
+
+.page__content  { 
+    display: flex;
+    gap: 30px;
+
+    flex-wrap: wrap;
+}
+
+
+/* CARDS----------------------------------------------------- */
+.card {
+    width: 360px;
+    height: auto;
+
+    background-color: #32bee1;
+    
+    padding-bottom: 0;
+    /* border: #000 1px solid; */
+    border-radius: 10px;
+}
+
+.card:hover {
+    box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+}
+
+.card__image {
+    width: 360px;
+    height: 360px;
+    border-radius: 10px 10px 0 0;
+}
+ 
+.card__container {
+    padding: 20px;
+
+}
+ 
+.card__container_title {
+    color:black;
+    font-size: large;
+    font-weight: bold;
+
+    padding-bottom: 15px;
+}
+ 
+.card__container_subtitle {
+    color: #5a5a5a;
+}
+
+/* PLANE PAGE ------------------------------- */
+.plane-page {
+    display: flex;
+    flex-direction: column;
+
+    gap: 30px;
+}
+
+.plane-page__content {
+    display: flex;
+    gap: 30px;
+}
+
+.plane-page__image {
+    height: 500px;
+}
+
+

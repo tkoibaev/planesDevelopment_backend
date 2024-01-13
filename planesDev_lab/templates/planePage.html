@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="plane-page">
+    <div>
+        <a href="{% url 'options_url' %}" class="btn">Вернуться на главную страницу</a>
+    </div>
+    <div class="plane-page__content">
+        <div>
+            <img class="plane-page__image" src="{% static image %}" alt="Изображение самолета">
+        </div>
+        <div class="plane-page__info">
+            <h2>{{ title }}</h2>
+            <p>{{ description }}</p>
+            <ul>
+                {% for feature in features %}
+                    <li>{{ feature }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+
+{% endblock %}
