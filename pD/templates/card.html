@@ -1,0 +1,13 @@
+
+
+{% load static %}
+<div class="card">
+    <div>
+        <img class="card__image" src="{% static 'images/'|add:var.image %}" alt="card image" />
+    </div>
+    <div class="card__container">
+        <div class="card__container_title">{{ var.title }}</div>
+        <div class="card__container_subtitle">{{ var.category }}</div>
+        <a class="card__delete-button" href="{% url 'delete_record' var.option_id %}">Удалить</a>
+    </div>
+</div>

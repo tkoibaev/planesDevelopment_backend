@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Список комплектаций{% endblock %}
+
+{% block content %}
+<div class="page">
+    
+    <form class="form"  method="get">
+        {% csrf_token %}
+        <input   placeholder="Укажите категорию..." class="page__input" name="text" type="text" value={{find}}>
+        <input class="page__button" type="submit" value="Поиск">
+    </form>
+    <div class="page__content">
+        {% for var in vars %}
+            <a href="{% url 'option_url' var.option_id %}">
+                {% include 'card.html' %}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

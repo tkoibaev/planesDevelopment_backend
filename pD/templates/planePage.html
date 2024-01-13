@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ selected_option.title }}{% endblock %}
+
+{% block content %}
+<div class="plane-page">
+    <div>
+        <a href="{% url 'options_url' %}" class="btn">Вернуться на главную страницу</a>
+    </div>
+    <div class="plane-page__content">
+        <div>
+            <img class="plane-page__image" src="{% static 'images/'|add:selected_option.image %}" alt="Изображение самолета">
+        </div>
+        <div class="plane-page__info">
+            <h2>{{ selected_option.title }}</h2>
+            <p>{{ selected_option.description }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
