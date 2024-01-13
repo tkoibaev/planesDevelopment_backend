@@ -6,6 +6,3 @@ https://github.com/tkoibaev/planesDevelopment_frontend
 
 https://github.com/tkoibaev/planesDevelopment_native
 
-# Репозиторий асинхронного сервиса
-
-https://github.com/OlesiaGapeeva/asyncService
